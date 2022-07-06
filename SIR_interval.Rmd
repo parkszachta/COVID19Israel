@@ -1,0 +1,55 @@
+---
+title: "SEIR_intervals"
+output: html_document
+date: '2022-07-05'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###
+```{r}
+source("israel_functions.R")
+```
+
+
+
+### Set Date Ranges
+```{r}
+date0 <- as.Date("2020-12-27")
+date1 <- as.Date("2021-01-07")
+date2 <- as.Date("2021-02-07")
+date3 <- as.Date("2021-03-07")
+date4 <- as.Date("2021-04-18")
+
+date_initial = as.Date(date0)
+date_final = as.Date(date4)
+```
+
+
+```{r}
+israel <- israel_data_only(date_initial, date_final)
+
+israel = israel %>% 
+  mutate(period = ifelse(date < date1, 1, 
+                         ifelse(date >= date1 & date < date2, 2, 
+                                ifelse(date >= date2 & date < date3, 3, 
+                                       ifelse(date >= date3, 4, 0)))))
+```
+
+```{r}
+df1 <- israel %>% filter(period == 1)
+df2 <- israel %>% filter(period == 2)
+df3 <- israel %>% filter(period == 3)
+df4 <- israel %>% filter(period == 4)
+
+# Run algo for each df, using last day of previous as initial for this one 
+# Add predicted values to df
+# Rbind the 4 df into one
+# Use geom_smooth to create lines
+#     tune smoothing parameter
+```
+
+
+
