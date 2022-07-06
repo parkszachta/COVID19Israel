@@ -1,0 +1,56 @@
+---
+title: "Israel_Shiny"
+output: html_document
+date: '2022-07-06'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(shiny)
+source("SIRmle.R")
+
+preds <- israel_info()
+israel <- preds[[1]]
+pred_I <- preds[[2]]
+pred_R <- preds[[3]]
+p <- plotting(pred_I, pred_R)
+
+```
+
+
+```{r}
+ui <- fluidPage(
+
+  # Application title
+  titlePanel("Beta/Gamma Graph"),
+
+  # Show a plot of the generated distribution
+  mainPanel(
+    plotOutput("distPlot")
+  )
+)
+```
+
+
+```{r}
+server <- function(input, output) {
+
+  source("SIRmle.R")
+  p <- plotting(pred_I, pred_R)
+  print(p)
+  
+  output$distPlot <- renderPlot({
+    p
+  })
+}
+```
+
+```{r}
+# Run the application
+shinyApp(ui = ui, server = server)
+```
+
