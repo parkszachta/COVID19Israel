@@ -17,7 +17,6 @@ preds <- israel_info()
 israel <- preds[[1]]
 pred_I <- preds[[2]]
 pred_R <- preds[[3]]
-p <- plotting(pred_I, pred_R)
 
 ```
 
@@ -30,7 +29,7 @@ ui <- fluidPage(
 
   # Show a plot of the generated distribution
   mainPanel(
-    plotOutput("distPlot")
+    plotOutput("plot")
   )
 )
 ```
@@ -40,11 +39,12 @@ ui <- fluidPage(
 server <- function(input, output) {
 
   source("SIRmle.R")
-  p <- plotting(pred_I, pred_R)
-  print(p)
-  
-  output$distPlot <- renderPlot({
-    p
+  p1 <- plot1(pred_I, israel)
+  p2 <- plot2(pred_R, israel)
+
+
+  output$plot <- renderPlot({
+    grid.arrange(p1, p2)
   })
 }
 ```
