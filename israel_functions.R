@@ -87,7 +87,7 @@ seir_1 = function(beta, gamma, sigma, E0, I0, R0, times, N, lambda, mu) {
       dS = -beta * I * S/N + lambda * N - mu * S 
       dE = beta * I * S/N - sigma * E - mu * E
       dI =  sigma*E - gamma * I -mu * I
-      dR =  gamma * I - mu*R
+      dR =  gamma * I - mu * R
       return(list(c(dS, dE, dI, dR)))
     })
   }
@@ -125,17 +125,19 @@ ss2_SIR = function(x, N, data, lambda, mu) {
   ss_SIR(beta = x[1], gamma = x[2], N = N, data = data, lambda = lambda, mu = mu)
 }
 
-ss_SEIR = function(beta, gamma, N, data, lambda, mu) {
+ss_SEIR = function(beta, gamma, sigma, N, data, lambda, mu) {
   # starting cases and removals on day 1
   I0 = data$I[1]
   R0 = data$R[1]
+  # E0 = (data$cases_total[2] - data$cases_total[1]) / sigma
+  E0 = I0 * 3
   times = data$day
   # transform parameters so they are non-negative
   beta = exp(beta)
   gamma = exp(gamma)
   # generate predictions using parameters, starting values
-  predictions = seir_1(beta = beta, gamma = gamma,                        # parameters
-                      I0 = I0, R0 = R0,                                  # variables' intial values
+  predictions = seir_1(beta = beta, gamma = gamma, sigma = sigma,                       # parameters
+                      I0 = I0, R0 = R0, E0 = E0,                              # variables' intial values
                       times = times, N = N, lambda = lambda, mu = mu)    # time points
   # compute the sums of squares
   sum((predictions$I[-1] - data$I[-1])^2 + (predictions$R[-1] - data$R[-1])^2)
@@ -143,8 +145,8 @@ ss_SEIR = function(beta, gamma, N, data, lambda, mu) {
 }
 
 # convenient wrapper to return sums of squares 
-ss2_SEIR = function(x, N, data, lambda, mu) {
-  ss_SEIR(beta = x[1], gamma = x[2], N = N, data = data, lambda = lambda, mu = mu)
+ss2_SEIR = function(x, N, data, lambda, mu, sigma) {
+  ss_SEIR(beta = x[1], gamma = x[2], N = N, data = data, lambda = lambda, mu = mu, sigma = sigma)
 }
 
 #loglikelihood function for mle
@@ -161,14 +163,16 @@ logli_SIR = function(beta, gamma, N, dat, lambda, mu) {
   -sum(dpois(x = dat$I, lambda = predictions$I, log = TRUE)) - sum(dpois(x = dat$R, lambda = predictions$R, log = TRUE))
 }
 
-logli_SEIR = function(beta, gamma, N, dat, lambda, mu) {
+logli_SEIR = function(beta, gamma, sigma, N, dat, lambda, mu) {
   I0 = dat$I[1]
   R0 = dat$R[1]
+  # E0 = (dat$cases_total[2] - dat$cases_total[1]) / sigma
+  E0 = I0 * 3
   times = dat$day
   beta = exp(beta)
   gamma = exp(gamma)
-  predictions = seir_1(beta = beta, gamma = gamma,   # parameters
-                      I0 = I0, R0 = R0, # variables' intial values
+  predictions = seir_1(beta = beta, gamma = gamma, sigma = sigma,  # parameters
+                      I0 = I0, R0 = R0, E0 = E0, # variables' intial values
                       times = times, N = N, lambda = lambda, mu = mu)
   ## negative of log likelihood
   -sum(dpois(x = dat$I, lambda = predictions$I, log = TRUE)) - sum(dpois(x = dat$R, lambda = predictions$R, log = TRUE))

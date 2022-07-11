@@ -11,13 +11,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(shiny)
-source("SIRmle.R")
+source("SIR_interval_test.R")
 
-preds <- israel_info()
-israel <- preds[[1]]
-pred_I <- preds[[2]]
-pred_R <- preds[[3]]
+israel <- israel_SIR_preds()
 
+
+date0 <- as.Date("2020-12-27")
+date1 <- as.Date("2021-01-07")
+date2 <- as.Date("2021-02-07")
+date3 <- as.Date("2021-03-07")
+date4 <- as.Date("2021-04-18")
+
+date_initial = date0
+date_final = date4
 ```
 
 
@@ -25,7 +31,7 @@ pred_R <- preds[[3]]
 ui <- fluidPage(
 
   # Application title
-  titlePanel("Beta/Gamma Graph"),
+  titlePanel("SIR Active Cases/Recovered"),
 
   # Show a plot of the generated distribution
   mainPanel(
@@ -38,9 +44,8 @@ ui <- fluidPage(
 ```{r}
 server <- function(input, output) {
 
-  source("SIRmle.R")
-  p1 <- plot1(pred_I, israel)
-  p2 <- plot2(pred_R, israel)
+  p1 <- SIR_plot1(israel, date_initial, date_final)
+  p2 <- SIR_plot2(israel, date_initial, date_final)
 
 
   output$plot <- renderPlot({
