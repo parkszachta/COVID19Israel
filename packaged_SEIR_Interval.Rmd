@@ -1,0 +1,202 @@
+---
+title: "SEIR_intervals"
+output: html_document
+date: '2022-07-05'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###
+```{r}
+source("israel_functions.R")
+install.packages("EpiDynamics")
+library(EpiDynamics)
+```
+
+
+
+### Set Date Ranges
+```{r}
+date0 <- as.Date("2020-12-27")
+date1 <- as.Date("2021-01-07")
+date2 <- as.Date("2021-02-07")
+date3 <- as.Date("2021-03-07")
+date4 <- as.Date("2021-04-18")
+
+date_initial = date0
+date_final = date4
+```
+
+
+```{r}
+israel <- israel_data_only(date_initial, date_final)
+
+israel = israel %>% 
+  mutate(period = ifelse(date < date1, 1, 
+                         ifelse(date >= date1 & date < date2, 2, 
+                                ifelse(date >= date2 & date < date3, 3, 
+                                       ifelse(date >= date3, 4, 0)))))
+df1 <- israel %>% filter(period == 1)
+df2 <- israel %>% filter(period == 2)
+df3 <- israel %>% filter(period == 3)
+df4 <- israel %>% filter(period == 4)
+```
+
+
+```{r}
+N=9449000
+lambda = mu = 1 / (365 * 82.8) 
+sigma = 1 / (5.8)
+
+starting_param_val = c(mu = mu, beta = 1e-2, sigma = sigma, gamma = 1e-5)
+# estimates_pois = mle2(minuslogl = logli_SEIR,
+#                       start = lapply(starting_param_val, log), method = "Nelder-Mead",
+#                       data=list(dat = df1, N = N, lambda = lambda, mu = mu, sigma = sigma))
+
+# estimates_pois = optim(starting_param_val, ss2_SEIR, N = N, data = df1, lambda = lambda, mu = mu, sigma = sigma, method = "L-BFGS-B")
+
+# pars_df1 = as.numeric(estimates_pois$par)
+# 
+# pred_df1 = seir_1(beta = exp(pars_df1[1]), gamma = exp(pars_df1[2]), sigma = sigma, I0 = df1$I[1],
+#                     R0 = df1$R[1], E0 = 3 * df1$I[1],
+# times = df1$day, N = N, lambda = lambda,
+#                     mu = mu) 
+
+# df1 <- df1 %>% mutate(pred_I = pred_df1[3], pred_R = pred_df1[4])
+
+I0_prop = df2$I[1] / N
+R0_prop = df2$R[1] / N
+E0_prop = 3 * I0_prop
+S0_prop = 1 - I0_prop - R0_prop - E0_prop
+initials = c(S = S0_prop, E = E0_prop, I = I0_prop, R = R0_prop)
+
+
+
+df_res = SEIR(pars = starting_param_val, init = initials, time = df2$day[1]:df2$day[nrow(df1)])
+df_res
+```
+
+```{r}
+ estimates_pois = mle2(minuslogl = logli_SEIR,
+                      start = lapply(starting_param_val, log), method = "L-BFGS-B",
+                      data=list(dat = df2, N = N, lambda = lambda, mu = mu, sigma = sigma))
+
+estimates_pois = optim(starting_param_val, ss2_SEIR, N = N, data = df2, 
+                       lambda = lambda, mu = mu, sigma = sigma, method = "L-BFGS-B")
+
+pars_df2 = as.numeric(coef(estimates_pois))
+
+pred_df2 = seir_1(beta = exp(pars_df2[1]), gamma = exp(pars_df2[2]), 
+                  sigma = sigma, 
+                  I0 = df2$I[1], R0 = df2$R[1], E0 = df2$I[1] * 3, 
+                  times = df2$day, N = N, lambda = lambda, mu = mu) 
+
+df2 <- df2 %>% mutate(pred_I = pred_df2[3], pred_R = pred_df2[4])
+
+```
+
+
+```{r}
+# estimates_pois = mle2(minuslogl = logli_SEIR,
+#                       start = lapply(starting_param_val, log), method = "Nelder-Mead",
+#                       data=list(dat = df3, N = N, lambda = lambda, mu = mu, sigma = sigma))
+estimates_pois = optim(starting_param_val, ss2_SEIR, N = N, data = df3, lambda = lambda, mu = mu, sigma = sigma)
+
+pars_df3 = as.numeric(coef(estimates_pois))
+
+pred_df3 = seir_1(beta = exp(pars_df3[1]), gamma = exp(pars_df3[2]), sigma = sigma, I0 = df3$I[1],
+                    R0 = df3$R[1],   E0 = df4$I[1] * 3, 
+times = df3$day, N = N, lambda = lambda,
+                    mu = mu) 
+
+df3 <- df3 %>% mutate(pred_I = pred_df3[3], pred_R = pred_df3[4])
+
+```
+
+```{r}
+# estimates_pois = mle2(minuslogl = logli_SEIR,
+#                       start = lapply(starting_param_val, log), method = "Nelder-Mead",
+#                       data=list(dat = df4, N = N, lambda = lambda, mu = mu, sigma = sigma))
+
+estimates_pois = optim(starting_param_val, ss2_SEIR, N = N, data = df4, lambda = lambda, mu = mu, sigma = sigma)
+
+pars_df4 = as.numeric(coef(estimates_pois))
+
+pred_df4 = seir_1(beta = exp(pars_df4[1]), gamma = exp(pars_df4[2]), sigma = sigma, I0 = df4$I[1],
+                    R0 = df4$R[1], E0 = df4$I[1] * 4, times = df4$day, N = N, lambda = lambda,
+                    mu = mu) 
+
+df4 <- df4 %>% mutate(pred_I = pred_df4[3], pred_R = pred_df4[4])
+
+```
+
+```{r}
+israel_new <- rbind(df1, df2, df3, df4)
+```
+
+```{r}
+ci = c("#C79999")
+mn = c("#7C0000")
+date_breaks = "1 month"
+
+base = ggplot() +
+  xlab("") +
+  scale_x_date(
+    date_breaks = date_breaks,
+    labels = scales::date_format("%e %b")
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12)
+  ) +
+  theme(legend.position = "right")
+
+
+p1_SEIR = base +
+   geom_line(mapping = aes(x = date, y = pred_I$I, color = colour),
+             data = israel_new, size = 1,color = mn) +
+   geom_bar(mapping = aes(x = date, y = I), stat = "identity",
+            data = israel_new, width = 0.5, fill = 'steelblue', alpha = 0.7,
+   ) +
+xlim(date_initial, date_final)
+p1_SEIR = p1_SEIR + labs(y = "Active Infected")
+```
+
+```{r}
+ci = c("#C79999")
+mn = c("#7C0000")
+date_breaks = "1 month"
+
+base = ggplot() +
+  xlab("") +
+  scale_x_date(
+    date_breaks = date_breaks,
+    labels = scales::date_format("%e %b")
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12)
+  ) +
+  theme(legend.position = "right")
+
+
+p2_SEIR = base +
+   geom_line(mapping = aes(x = date, y = pred_R$R, color = colour),
+             data = israel_new, size = 1,color = mn) +
+   geom_bar(mapping = aes(x = date, y = R), stat = "identity",
+            data = israel_new, width = 0.5, fill = 'steelblue', alpha = 0.7,
+   ) +
+xlim(date_initial, date_final)
+p2_SEIR = p2_SEIR + labs(y = "Removed")
+```
+
+```{r}
+grid.arrange(p1_SEIR, p2_SEIR)
+```
+
