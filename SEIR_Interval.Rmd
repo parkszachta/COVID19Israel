@@ -28,7 +28,7 @@ date_final = date4
 ```
 
 
-```{r}
+```{r, results = hide}
 israel <- israel_data_only(date_initial, date_final)
 
 israel = israel %>% 
@@ -44,45 +44,52 @@ df4 <- israel %>% filter(period == 4)
 
 
 ```{r}
+source("israel_functions.R")
+
 N=9449000
 lambda = mu = 1 / (365 * 82.8) 
 sigma = 1 / (5.8)
 
-starting_param_val = list(beta = 1e-2, gamma = 1e-5)
+starting_param_val = log(c(1e-2,1e-5))
 # estimates_pois = mle2(minuslogl = logli_SEIR,
 #                       start = lapply(starting_param_val, log), method = "Nelder-Mead",
 #                       data=list(dat = df1, N = N, lambda = lambda, mu = mu, sigma = sigma))
 
-estimates_pois = optim(starting_param_val, ss2_SEIR, N = N, data = df1, lambda = lambda, mu = mu, sigma = sigma, method = "L-BFGS-B")
+
+ret_val <- SEIR_k_optim(df1, starting_param_val)
+k <- ret_val[[1]]
+estimates_pois <- ret_val[[2]] 
 
 
-pars_df1 = as.numeric(estimates_pois$par)
+pars_df1 = estimates_pois
 
-pred_df1 = seir_1(beta = exp(pars_df1[1]), gamma = exp(pars_df1[2]), sigma = sigma, I0 = df1$I[1],
-                    R0 = df1$R[1], E0 = 3 * df1$I[1],
+
+pred_df1 = seir_1(beta = exp(pars_df1[1]), gamma = exp(pars_df1[2]), 
+                  sigma = sigma, I0 = df1$I[1], R0 = df1$R[1], K = k,
 times = df1$day, N = N, lambda = lambda,
                     mu = mu) 
 
-df1 <- df1 %>% mutate(pred_I = pred_df1[3], pred_R = pred_df1[4])
+df1 <- df1 %>% mutate(pred_I = pred_df1[4], pred_R = pred_df1[5])
 
 ```
 
 ```{r}
- estimates_pois = mle2(minuslogl = logli_SEIR,
-                      start = lapply(starting_param_val, log), method = "L-BFGS-B",
-                      data=list(dat = df2, N = N, lambda = lambda, mu = mu, sigma = sigma))
+ # estimates_pois = mle2(minuslogl = logli_SEIR,
+ #                      start = lapply(starting_param_val, log), method = "Nelder-Mead",
+ #                      data=list(dat = df2, N = N, lambda = lambda, mu = mu, sigma = sigma))
 
-estimates_pois = optim(starting_param_val, ss2_SEIR, N = N, data = df2, 
-                       lambda = lambda, mu = mu, sigma = sigma, method = "L-BFGS-B")
 
-pars_df2 = as.numeric(coef(estimates_pois))
+ret_val <- SEIR_k_optim(df2, pars_df1)
+k <- ret_val[[1]]
+pars_df2 <- ret_val[[2]] 
+
 
 pred_df2 = seir_1(beta = exp(pars_df2[1]), gamma = exp(pars_df2[2]), 
                   sigma = sigma, 
-                  I0 = df2$I[1], R0 = df2$R[1], E0 = df2$I[1] * 3, 
+                  I0 = df2$I[1], R0 = df2$R[1], K = k, 
                   times = df2$day, N = N, lambda = lambda, mu = mu) 
 
-df2 <- df2 %>% mutate(pred_I = pred_df2[3], pred_R = pred_df2[4])
+df2 <- df2 %>% mutate(pred_I = pred_df2[4], pred_R = pred_df2[5])
 
 ```
 
@@ -91,16 +98,16 @@ df2 <- df2 %>% mutate(pred_I = pred_df2[3], pred_R = pred_df2[4])
 # estimates_pois = mle2(minuslogl = logli_SEIR,
 #                       start = lapply(starting_param_val, log), method = "Nelder-Mead",
 #                       data=list(dat = df3, N = N, lambda = lambda, mu = mu, sigma = sigma))
-estimates_pois = optim(starting_param_val, ss2_SEIR, N = N, data = df3, lambda = lambda, mu = mu, sigma = sigma)
-
-pars_df3 = as.numeric(coef(estimates_pois))
+ret_val <- SEIR_k_optim(df3, pars_df2)
+k <- ret_val[[1]]
+pars_df3 <- ret_val[[2]] 
 
 pred_df3 = seir_1(beta = exp(pars_df3[1]), gamma = exp(pars_df3[2]), sigma = sigma, I0 = df3$I[1],
-                    R0 = df3$R[1],   E0 = df4$I[1] * 3, 
+                    R0 = df3$R[1], K = k,
 times = df3$day, N = N, lambda = lambda,
                     mu = mu) 
 
-df3 <- df3 %>% mutate(pred_I = pred_df3[3], pred_R = pred_df3[4])
+df3 <- df3 %>% mutate(pred_I = pred_df3[4], pred_R = pred_df3[5])
 
 ```
 
@@ -108,16 +115,16 @@ df3 <- df3 %>% mutate(pred_I = pred_df3[3], pred_R = pred_df3[4])
 # estimates_pois = mle2(minuslogl = logli_SEIR,
 #                       start = lapply(starting_param_val, log), method = "Nelder-Mead",
 #                       data=list(dat = df4, N = N, lambda = lambda, mu = mu, sigma = sigma))
+ret_val <- SEIR_k_optim(df4, pars_df3)
+k <- ret_val[[1]]
+pars_df4 <- ret_val[[2]] 
 
-estimates_pois = optim(starting_param_val, ss2_SEIR, N = N, data = df4, lambda = lambda, mu = mu, sigma = sigma)
-
-pars_df4 = as.numeric(coef(estimates_pois))
-
-pred_df4 = seir_1(beta = exp(pars_df4[1]), gamma = exp(pars_df4[2]), sigma = sigma, I0 = df4$I[1],
-                    R0 = df4$R[1], E0 = df4$I[1] * 4, times = df4$day, N = N, lambda = lambda,
+pred_df4 = seir_1(beta = exp(pars_df4[1]), gamma = exp(pars_df4[2]), sigma = sigma, 
+                  I0 = df4$I[1], R0 = df4$R[1], K = k, 
+                  times = df4$day, N = N, lambda = lambda,
                     mu = mu) 
 
-df4 <- df4 %>% mutate(pred_I = pred_df4[3], pred_R = pred_df4[4])
+df4 <- df4 %>% mutate(pred_I = pred_df4[4], pred_R = pred_df4[5])
 
 ```
 

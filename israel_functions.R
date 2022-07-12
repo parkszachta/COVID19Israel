@@ -1,3 +1,11 @@
+# Packages ----
+library(deSolve)
+library(outbreaks)
+library(gridExtra)
+library(arm)
+library(tidyverse)
+library(bbmle)
+
 israel_data_only <- function(date_initial, date_final){
 
 
@@ -80,9 +88,9 @@ sir_1 = function(beta, gamma, I0, R0, times, N, lambda, mu) {
 }
 
 
-seir_1 = function(beta, gamma, sigma, E0, I0, R0, times, N, lambda, mu) {
+seir_1 = function(beta, gamma, sigma, K, I0, R0, times, N, lambda, mu) {
   # define SEIR equations
-  sir_equations = function(time, variables, parameters) {
+  seir_equations = function(time, variables, parameters) {
     with(as.list(c(variables, parameters)), {
       dS = -beta * I * S/N + lambda * N - mu * S 
       dE = beta * I * S/N - sigma * E - mu * E
@@ -92,11 +100,12 @@ seir_1 = function(beta, gamma, sigma, E0, I0, R0, times, N, lambda, mu) {
     })
   }
   # prepare input for ODE solver
-  parameters_values = c(beta = beta, gamma = gamma, sigma = sigma)
+  parameters_values = c(beta = beta, gamma = gamma)
+  E0 = K * I0
   S0 = N - I0 - R0 - E0
-  initial_values = c(S = S0, I = I0, R = R0, E = E0)
+  initial_values = c(S = S0, E = E0, I = I0, R = R0)
   # solve system of ODEs
-  out = ode(initial_values, times, sir_equations, parameters_values,method = "rk4")
+  out = ode(initial_values, times, seir_equations, parameters_values,method = "rk4")
   return(as.data.frame(out))
 }
 
@@ -125,19 +134,18 @@ ss2_SIR = function(x, N, data, lambda, mu) {
   ss_SIR(beta = x[1], gamma = x[2], N = N, data = data, lambda = lambda, mu = mu)
 }
 
-ss_SEIR = function(beta, gamma, sigma, N, data, lambda, mu) {
+ss_SEIR = function(beta, gamma, sigma, N, data, lambda, mu, K) {
   # starting cases and removals on day 1
   I0 = data$I[1]
   R0 = data$R[1]
   # E0 = (data$cases_total[2] - data$cases_total[1]) / sigma
-  E0 = I0 * 3
   times = data$day
   # transform parameters so they are non-negative
   beta = exp(beta)
   gamma = exp(gamma)
   # generate predictions using parameters, starting values
   predictions = seir_1(beta = beta, gamma = gamma, sigma = sigma,                       # parameters
-                      I0 = I0, R0 = R0, E0 = E0,                              # variables' intial values
+                      I0 = I0, R0 = R0, K = K,                           # variables' intial values
                       times = times, N = N, lambda = lambda, mu = mu)    # time points
   # compute the sums of squares
   sum((predictions$I[-1] - data$I[-1])^2 + (predictions$R[-1] - data$R[-1])^2)
@@ -145,8 +153,8 @@ ss_SEIR = function(beta, gamma, sigma, N, data, lambda, mu) {
 }
 
 # convenient wrapper to return sums of squares 
-ss2_SEIR = function(x, N, data, lambda, mu, sigma) {
-  ss_SEIR(beta = x[1], gamma = x[2], N = N, data = data, lambda = lambda, mu = mu, sigma = sigma)
+ss2_SEIR = function(x, N, data, K, lambda, mu, sigma) {
+  ss_SEIR(beta = x[1], gamma = x[2], N = N, data = data, lambda = lambda, mu = mu, sigma = sigma, K = K)
 }
 
 #loglikelihood function for mle
@@ -167,7 +175,7 @@ logli_SEIR = function(beta, gamma, sigma, N, dat, lambda, mu) {
   I0 = dat$I[1]
   R0 = dat$R[1]
   # E0 = (dat$cases_total[2] - dat$cases_total[1]) / sigma
-  E0 = I0 * 3
+  E0 = I0 * 0.2
   times = dat$day
   beta = exp(beta)
   gamma = exp(gamma)
@@ -177,3 +185,27 @@ logli_SEIR = function(beta, gamma, sigma, N, dat, lambda, mu) {
   ## negative of log likelihood
   -sum(dpois(x = dat$I, lambda = predictions$I, log = TRUE)) - sum(dpois(x = dat$R, lambda = predictions$R, log = TRUE))
 }
+
+
+SEIR_k_optim = function(df, starting_param_val){
+  N=9449000
+  lambda = mu = 1 / (365 * 82.8) 
+  sigma = 1 / (5.8)
+  
+  k_seq <- seq(0.1, 1.5, by = 0.02)
+  k_min <- 0
+  estimate_min <- 99999999
+  error <- c()
+  params <- c()
+  for(i in k_seq){
+    estimates_pois = optim(starting_param_val, ss2_SEIR, N = N, data = df, lambda = lambda, mu = mu, sigma = sigma, K = i)
+    error <- c(error, estimates_pois$value)
+    params <- c(params, list(estimates_pois$par))
+    
+  }
+  k <- k_seq[which.min(error)]
+  params_min <- c(params[which.min(error)])
+  return(c(k, params_min))
+  
+}
+
