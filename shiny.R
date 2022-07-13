@@ -1,15 +1,8 @@
----
-title: "Israel_Shiny"
-output: html_document
-date: '2022-07-06'
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 
-```{r}
+
+
+
 library(shiny)
 source("Israel_SEIR_predictions.R")
 
@@ -23,22 +16,22 @@ date4 <- as.Date("2021-04-18")
 
 date_initial = date0
 date_final = date4
-```
 
-```{r}
+
+
 israel$pred_I = unlist(israel$pred_I)
 israel$date = unlist(israel$date)
 israel$pred_R = unlist(israel$pred_R)
 israel$I = unlist(israel$I)
 israel$R = unlist(israel$R)
-```
 
-```{r}
+
+
 ui <- fluidPage(
-
+  
   # Application title
   titlePanel("SEIR Active Cases/Recovered"),
-
+  
   # Show a plot of the generated distribution
   mainPanel(
     tabsetPanel(type = "tabs", 
@@ -49,29 +42,30 @@ ui <- fluidPage(
   )
 )
 
-```
 
 
-```{r}
+
+
 server <- function(input, output) {
-
+  
   p1 <- SEIR_plot1(israel)
   p2 <- SEIR_plot2(israel)
-
-
+  
+  
   output$infected_plot <- renderPlot({
     p1
   })
   output$recovered_plot <- renderPlot({
     p2
   })
-   
+  
   
 }
-```
 
-```{r}
+
+
 # Run the application
 shinyApp(ui = ui, server = server)
-```
+
+
 

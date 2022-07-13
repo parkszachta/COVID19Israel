@@ -68,7 +68,7 @@ israel_pred_df = function(){
   a = predict_data(df4, a[[2]])
   df4 = a[[1]]
 
-  israel_new <- rbind(df1, df2, df3, df4)
+  israel_new <- rbind.data.frame(df1, df2, df3, df4)
 
   return(israel_new)
 }
@@ -98,7 +98,7 @@ SEIR_plot1 <- function(israel_new){
 
   
   p1 = base +
-    geom_line(mapping = aes(x = date, y = pred_I, color = colour),
+    geom_smooth(mapping = aes(x = date, y = pred_I, color = colour),
               data = israel_new, size = 0.5, color = mn) +
     # geom_ribbon(
     #   mapping = aes(x = date, ymin = lwrI, ymax = uprI),
