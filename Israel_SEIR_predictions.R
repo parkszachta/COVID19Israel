@@ -1,5 +1,10 @@
 source("israel_functions.R")
-
+library(deSolve)
+library(outbreaks)
+library(gridExtra)
+library(arm)
+library(tidyverse)
+library(bbmle)
 
 
 predict_data = function(df, params){
@@ -32,28 +37,28 @@ israel_pred_df = function(){
   date2 <- as.Date("2021-02-07")
   date3 <- as.Date("2021-03-07")
   date4 <- as.Date("2021-04-18")
-  
+
   date_initial = date0
   date_final = date4
-  
+
   israel <- israel_data_only(date_initial, date_final)
-  
-  israel = israel %>% 
-    mutate(period = ifelse(date < date1, 1, 
-                           ifelse(date >= date1 & date < date2, 2, 
-                                  ifelse(date >= date2 & date < date3, 3, 
+
+  israel = israel %>%
+    mutate(period = ifelse(date < date1, 1,
+                           ifelse(date >= date1 & date < date2, 2,
+                                  ifelse(date >= date2 & date < date3, 3,
                                          ifelse(date >= date3, 4, 0)))))
   df1 <- israel %>% filter(period == 1)
   df2 <- israel %>% filter(period == 2)
   df3 <- israel %>% filter(period == 3)
   df4 <- israel %>% filter(period == 4)
-  
+
   N=9449000
-  lambda = mu = 1 / (365 * 82.8) 
+  lambda = mu = 1 / (365 * 82.8)
   sigma = 1 / (5.8)
-  
+
   starting_param_val = log(c(1e-2,1e-5))
-  
+
   a = predict_data(df1, starting_param_val)
   df1 = a[[1]]
   a = predict_data(df2, a[[2]])
@@ -62,9 +67,9 @@ israel_pred_df = function(){
   df3 = a[[1]]
   a = predict_data(df4, a[[2]])
   df4 = a[[1]]
-  
-  israel_new <- rbind.data.frame(df1, df2, df3, df4)
-  
+
+  israel_new <- rbind(df1, df2, df3, df4)
+
   return(israel_new)
 }
 
@@ -76,24 +81,21 @@ SEIR_plot1 <- function(israel_new){
   mn = c("#7C0000")
   date_breaks = "1 month"
   
-  # base = ggplot() +
-  #   xlab("") +
-  #   scale_x_date(
-  #     date_breaks = date_breaks,
-  #     labels = scales::date_format("%e %b")
-  #   ) +
-  #   theme_bw() +
-  #   theme(
-  #     axis.text.x = element_text(angle = 45, hjust = 1),
-  #     axis.text = element_text(size = 12),
-  #     axis.title = element_text(size = 12)
-  #   ) +
-  #   theme(legend.position = "right")
-  # 
-  
-  # for(i in 1:ncol(israel_new)){
-  #   israel_new[,i] = unlist(israel_new[,i]) 
-  # }
+  base = ggplot() +
+    xlab("") +
+    scale_x_date(
+      date_breaks = date_breaks,
+      labels = scales::date_format("%e %b")
+    ) +
+    theme_bw() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      axis.text = element_text(size = 12),
+      axis.title = element_text(size = 12)
+    ) +
+    theme(legend.position = "right")
+
+
   
   p1 = base +
     geom_line(mapping = aes(x = date, y = pred_I, color = colour),

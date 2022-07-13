@@ -145,10 +145,12 @@ ss_SEIR = function(beta, gamma, sigma, N, data, lambda, mu, K) {
   gamma = exp(gamma)
   # generate predictions using parameters, starting values
   predictions = seir_1(beta = beta, gamma = gamma, sigma = sigma,                       # parameters
-                      I0 = I0, R0 = R0, K = K,                           # variables' intial values
+                      I0 = I0, R0 = R0, K = K,                           # variables' initial values
                       times = times, N = N, lambda = lambda, mu = mu)    # time points
   # compute the sums of squares
   sum((predictions$I[-1] - data$I[-1])^2 + (predictions$R[-1] - data$R[-1])^2)
+  # (1/length(data$R[-1]) * sum(2*abs(data$I[-1]-data$R[-1]) / (abs(data$R[-1])+abs(data$I[-1]))*100))
+  
   #sum((predictions$I[-1] - data$I[-1])^2 )
 }
 
@@ -197,15 +199,44 @@ SEIR_k_optim = function(df, starting_param_val){
   estimate_min <- 99999999
   error <- c()
   params <- c()
+  
   for(i in k_seq){
-    estimates_pois = optim(starting_param_val, ss2_SEIR, N = N, data = df, lambda = lambda, mu = mu, sigma = sigma, K = i)
+    estimates_pois = optim(starting_param_val, SMAPE2_SEIR, N = N, 
+                           data = df, lambda = lambda, mu = mu, sigma = sigma, K = i)
     error <- c(error, estimates_pois$value)
     params <- c(params, list(estimates_pois$par))
-    
   }
+  
   k <- k_seq[which.min(error)]
   params_min <- c(params[which.min(error)])
   return(c(k, params_min))
   
+}
+
+
+SMAPE_SEIR = function(beta, gamma, sigma, N, data, lambda, mu, K) {
+  # starting cases and removals on day 1
+  I0 = data$I[1]
+  R0 = data$R[1]
+  # E0 = (data$cases_total[2] - data$cases_total[1]) / sigma
+  times = data$day
+  # transform parameters so they are non-negative
+  beta = exp(beta)
+  gamma = exp(gamma)
+  # generate predictions using parameters, starting values
+  predictions = seir_1(beta = beta, gamma = gamma, sigma = sigma,                       # parameters
+                       I0 = I0, R0 = R0, K = K,                           # variables' intial values
+                       times = times, N = N, lambda = lambda, mu = mu)    # time points
+  # compute the sums of squares
+  # sum((predictions$I[-1] - data$I[-1])^2 + (predictions$R[-1] - data$R[-1])^2)
+  SPAME_I <- (1/length(predictions$I[-1]) * sum(2*abs(predictions$I[-1]-data$I[-1]) / (abs(predictions$I[-1])+abs(data$I[-1]))*100))
+  SPAME_R <- (1/length(predictions$R[-1]) * sum(2*abs(predictions$R[-1]-data$R[-1]) / (abs(predictions$R[-1])+abs(data$R[-1]))*100))
+  SPAME_R + SPAME_I
+  #sum((predictions$I[-1] - data$I[-1])^2 )
+}
+
+# convenient wrapper to return sums of squares 
+SMAPE2_SEIR = function(x, N, data, K, lambda, mu, sigma) {
+  SMAPE_SEIR(beta = x[1], gamma = x[2], N = N, data = data, lambda = lambda, mu = mu, sigma = sigma, K = K)
 }
 

@@ -11,10 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(shiny)
-source("SIR_interval_test.R")
+source("Israel_SEIR_predictions.R")
 
-israel <- israel_SIR_preds()
-
+israel <- as.data.frame(israel_pred_df())
 
 date0 <- as.Date("2020-12-27")
 date1 <- as.Date("2021-01-07")
@@ -35,7 +34,7 @@ ui <- fluidPage(
 
   # Show a plot of the generated distribution
   mainPanel(
-    plotOutput("plot")
+    plotOutput("infected_plot")
   )
 )
 ```
@@ -44,13 +43,17 @@ ui <- fluidPage(
 ```{r}
 server <- function(input, output) {
 
-  p1 <- SIR_plot1(israel, date_initial, date_final)
-  p2 <- SIR_plot2(israel, date_initial, date_final)
+  p1 <- SEIR_plot1(israel)
+#  p2 <- SEIR_plot2(israel)
 
 
-  output$plot <- renderPlot({
-    grid.arrange(p1, p2)
+  output$infected_plot <- renderPlot({
+    p1
   })
+  # output$recovered_plot <- renderPlot({
+  #   p2
+  # })
+  
 }
 ```
 
