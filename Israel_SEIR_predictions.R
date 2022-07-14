@@ -9,26 +9,51 @@ library(bbmle)
 
 predict_data = function(df, params){
   N=9449000
-  lambda = mu = 1 / (365 * 82.8) 
+  lambda = mu = 1 / (365 * 82.8)
   sigma = 1 / (5.8)
-  
+
   ret_val <- SEIR_k_optim(df, params)
   k <- ret_val[[1]]
-  estimates_pois <- ret_val[[2]] 
-  
+  estimates_pois <- ret_val[[2]]
+
   pars_df = estimates_pois
-  
-  pred_df = seir_1(beta = exp(pars_df[1]), gamma = exp(pars_df[2]), 
+
+  pred_df = seir_1(beta = exp(pars_df[1]), gamma = exp(pars_df[2]),
                    sigma = sigma, I0 = df$I[1], R0 = df$R[1], K = k,
                    times = df$day, N = N, lambda = lambda,
-                   mu = mu) 
-  
+                   mu = mu)
+
   df <- df %>% mutate(pred_I = pred_df[4], pred_R = pred_df[5])
-  
-  return(list(df, pars_df))
-  
+
+  return(list(df, pars_df, k))
 }
 
+ciband<-function(sigma_l,sigma_u,sigma_m,beta,gamma,data,rep, K){
+  pred_I_med=data$pred_I
+  pred_R_med=data$pred_R
+  sd=abs(1/sigma_l+1/sigma_u-2*(1/sigma_m))/(2*1.96)
+  pred_I=matrix(0,nrow=nrow(data),ncol=rep)
+  pred_R=matrix(0,nrow=nrow(data),ncol=rep)
+  for(i in 1:rep){
+    De=rnorm(1,mean=1/sigma_m, sd=sd)
+    sigma=1/De
+    predictions = seir_1(beta = beta, gamma = gamma, I0 = data$I[1],
+                         R0 = data$R[1], times = data$day, N = N, lambda = lambda,
+                         mu = mu, sigma=sigma, K = K)
+    p_I=rpois(nrow(predictions),lambda=predictions$I)
+    p_R=rpois(nrow(predictions),predictions$R)
+    pred_I[,i]=p_I
+    pred_R[,i]=p_R
+  }
+  lwrI = round(apply(pred_I,1,quantile, probs=0.025))
+  uprI = round(apply(pred_I,1,quantile, probs=0.975))
+  pred_I=data.frame(date,pred_I_med,lwrI,uprI)
+  lwrR = round(apply(pred_R,1,quantile, probs=0.025))
+  uprR = round(apply(pred_R,1,quantile, probs=0.975))
+  pred_R=data.frame(date,pred_R_med,lwrR,uprR)
+  data <- cbind(data, pred_I, pred_R)
+  return(data)
+}
 
 
 israel_pred_df = function(){
@@ -55,18 +80,41 @@ israel_pred_df = function(){
 
   N=9449000
   lambda = mu = 1 / (365 * 82.8)
-  sigma = 1 / (5.8)
+  sigma_m = 1 / 5.5
+  sigma_l = 1 / 5.9
+  sigma_u = 1/ 5.1
+  rep = 100
 
   starting_param_val = log(c(1e-2,1e-5))
 
   a = predict_data(df1, starting_param_val)
-  df1 = a[[1]]
-  a = predict_data(df2, a[[2]])
-  df2 = a[[1]]
-  a = predict_data(df3, a[[2]])
-  df3 = a[[1]]
-  a = predict_data(df4, a[[2]])
-  df4 = a[[1]]
+  df1 = as.data.frame(a[[1]])
+  df1_params <- a[[2]]
+  k = a[[3]]
+  df1 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
+                beta = df1_params[1], gamma = df1_params[2], df1, rep, K = k)
+
+  a = predict_data(df2, df1_params)
+  df2 = as.data.frame(a[[1]])
+  df2_params <- a[[2]]
+  k = a[[3]]
+  df2 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
+                beta = df2_params[1], gamma = df2_params[2], df2, rep, K = k)
+
+  a = predict_data(df3, df2_params)
+  df3 = as.data.frame(a[[1]])
+  df3_params <- a[[2]]
+  k = a[[3]]
+  df3 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
+                beta = df3_params[1], gamma = df3_params[2], df3, rep, K = k)
+
+
+  a = predict_data(df4, df3_params)
+  df4 = as.data.frame(a[[1]])
+  df4_params <- a[[2]]
+  k = a[[3]]
+  df4 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
+                beta = df4_params[1], gamma = df4_params[2], df4, rep, K = k)
 
   israel_new <- rbind.data.frame(df1, df2, df3, df4)
 
@@ -75,12 +123,12 @@ israel_pred_df = function(){
 
 
 SEIR_plot1 <- function(israel_new){
-  
+
   # Plot results ----
   ci = c("#C79999")
   mn = c("#7C0000")
   date_breaks = "1 month"
-  
+
   base = ggplot() +
     xlab("") +
     scale_x_date(
@@ -96,7 +144,7 @@ SEIR_plot1 <- function(israel_new){
     theme(legend.position = "right")
 
 
-  
+
   p1 = base +
     geom_smooth(mapping = aes(x = date, y = pred_I, color = colour),
               data = israel_new, size = 0.5, color = mn) +
@@ -109,20 +157,20 @@ SEIR_plot1 <- function(israel_new){
              data = israel_new, width = 0.5, fill = 'steelblue', alpha = 0.7,
     ) +
     xlim(israel_new$date[1], israel_new$date[nrow(israel_new)])
-  
+
   p1 = p1 + labs(y = "Active Cases")
   #ggsave("Cases_8months.pdf",p1,width=8, height=6)
-  
+
   return(p1)
 }
 
 
 SEIR_plot2 <- function(israel_new){
-  
+
   ci = c("#C79999")
   mn = c("#7C0000")
   date_breaks = "1 month"
-  
+
   base = ggplot() +
     xlab("") +
     scale_x_date(
@@ -136,8 +184,8 @@ SEIR_plot2 <- function(israel_new){
       axis.title = element_text(size = 12)
     ) +
     theme(legend.position = "right")
-  
-  
+
+
   p2 = base +
     geom_line(mapping = aes(x = date, y = pred_R, color = colour),
               data = israel_new, size = 1,color=mn) +
@@ -152,7 +200,7 @@ SEIR_plot2 <- function(israel_new){
     xlim(israel_new$date[1], israel_new$date[nrow(israel_new)])
   p2 = p2 + labs(y = "Removed")
   #ggsave("Removed_8months.pdf",p2,width=8, height=6)
-  
+
   return(p2)
-  
+
 }
