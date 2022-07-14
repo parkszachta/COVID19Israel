@@ -195,21 +195,33 @@ SEIR_k_optim = function(df, starting_param_val){
   sigma = 1 / (5.8)
   
   k_seq <- seq(0.1, 1.5, by = 0.02)
+  
+  
+  
   k_min <- 0
-  estimate_min <- 99999999
-  error <- c()
-  params <- c()
+  
+  
+  estimate_min <- .Machine$integer.max-1
+  error = 0
+  params = 0
   
   for(i in k_seq){
+    
+    
     estimates_pois = optim(starting_param_val, SMAPE2_SEIR, N = N, 
                            data = df, lambda = lambda, mu = mu, sigma = sigma, K = i)
-    error <- c(error, estimates_pois$value)
-    params <- c(params, list(estimates_pois$par))
+    
+    
+    if(estimates_pois$value < estimate_min){
+      estimate_min = estimates_pois$value
+      params = list(estimates_pois$par)
+      k_min = i
+    }
+
   }
   
-  k <- k_seq[which.min(error)]
-  params_min <- c(params[which.min(error)])
-  return(c(k, params_min))
+
+  return(c(k_min, params))
   
 }
 
