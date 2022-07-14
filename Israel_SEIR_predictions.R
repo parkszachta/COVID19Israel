@@ -29,13 +29,16 @@ predict_data = function(df, params){
 }
 
 ciband<-function(sigma_l,sigma_u,sigma_m,beta,gamma,data,rep, K){
+  N = 9449000
+  lambda = mu = 1 / (365 * 82.8)
+
   pred_I_med=data$pred_I
   pred_R_med=data$pred_R
-  sd=abs(1/sigma_l+1/sigma_u-2*(1/sigma_m))/(2*1.96)
+  sd=abs(1/sigma_l - 1/sigma_m)/(1.96)
   pred_I=matrix(0,nrow=nrow(data),ncol=rep)
   pred_R=matrix(0,nrow=nrow(data),ncol=rep)
   for(i in 1:rep){
-    De=rnorm(1,mean=1/sigma_m, sd=sd)
+    De=rnorm(1, mean=1/sigma_m, sd=sd)
     sigma=1/De
     predictions = seir_1(beta = beta, gamma = gamma, I0 = data$I[1],
                          R0 = data$R[1], times = data$day, N = N, lambda = lambda,
@@ -91,30 +94,30 @@ israel_pred_df = function(){
   df1 = as.data.frame(a[[1]])
   df1_params <- a[[2]]
   k = a[[3]]
-  df1 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
-                beta = df1_params[1], gamma = df1_params[2], df1, rep, K = k)
+  # df1 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
+  #               beta = df1_params[1], gamma = df1_params[2], df1, rep, K = k)
 
   a = predict_data(df2, df1_params)
   df2 = as.data.frame(a[[1]])
   df2_params <- a[[2]]
   k = a[[3]]
-  df2 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
-                beta = df2_params[1], gamma = df2_params[2], df2, rep, K = k)
+  # df2 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
+  #               beta = df2_params[1], gamma = df2_params[2], df2, rep, K = k)
 
   a = predict_data(df3, df2_params)
   df3 = as.data.frame(a[[1]])
   df3_params <- a[[2]]
   k = a[[3]]
-  df3 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
-                beta = df3_params[1], gamma = df3_params[2], df3, rep, K = k)
+  # df3 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
+  #               beta = df3_params[1], gamma = df3_params[2], df3, rep, K = k)
 
 
   a = predict_data(df4, df3_params)
   df4 = as.data.frame(a[[1]])
   df4_params <- a[[2]]
   k = a[[3]]
-  df4 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
-                beta = df4_params[1], gamma = df4_params[2], df4, rep, K = k)
+  # df4 <- ciband(sigma_l = sigma_l, sigma_m = sigma_m, sigma_u = sigma_u,
+  #               beta = df4_params[1], gamma = df4_params[2], df4, rep, K = k)
 
   israel_new <- rbind.data.frame(df1, df2, df3, df4)
 
