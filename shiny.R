@@ -1,10 +1,6 @@
-
-
-
-
-
 library(shiny)
 source("Israel_SEIR_predictions.R")
+source("positive_rate.R")
 
 israel <- as.data.frame(israel_pred_df())
 
@@ -36,8 +32,8 @@ ui <- fluidPage(
   mainPanel(
     tabsetPanel(type = "tabs", 
                 tabPanel("Infected", plotOutput("infected_plot")), 
-                tabPanel("Recovered", plotOutput("recovered_plot"))
-                
+                tabPanel("Removed", plotOutput("recovered_plot")),
+                tabPanel("TPR", plotlyOutput("tpr_plot"))
     )
   )
 )
@@ -50,6 +46,7 @@ server <- function(input, output) {
   
   p1 <- SEIR_plot1(israel)
   p2 <- SEIR_plot2(israel)
+  tpr <- positive_rate()
   
   
   output$infected_plot <- renderPlot({
@@ -58,6 +55,10 @@ server <- function(input, output) {
   output$recovered_plot <- renderPlot({
     p2
   })
+  output$tpr_plot <- renderPlotly({
+    tpr
+  })
+  
   
   
 }
