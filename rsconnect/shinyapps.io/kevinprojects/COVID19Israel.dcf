@@ -1,0 +1,13 @@
+name: COVID19Israel
+title: COVID19Israel
+username:
+account: kevinprojects
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6664338
+bundleId: 6112916
+url: https://kevinprojects.shinyapps.io/COVID19Israel/
+when: 1658256658.71433
+lastSyncTime: 1658256658.71434
+asMultiple: FALSE
+asStatic: FALSE

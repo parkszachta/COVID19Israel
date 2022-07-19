@@ -7,7 +7,7 @@ positive_rate <- function() {
   df = read_csv(link)
   df = df %>%
        filter(`location` == "Israel") %>%
-       select(date, positive_rate, new_tests, new_cases, new_cases_smoothed, new_tests_smoothed, people_fully_vaccinated_per_hundred, new_deaths_smoothed) %>%
+       dplyr::select(date, positive_rate, new_tests, new_cases, new_cases_smoothed, new_tests_smoothed, people_fully_vaccinated_per_hundred, new_deaths_smoothed) %>%
        mutate(calc_positive_rate = new_cases / new_tests, smooth_positive_rate = new_cases_smoothed / new_tests_smoothed, prop_fully_vaccinated = people_fully_vaccinated_per_hundred / 100, new_deaths_adj = new_deaths_smoothed / 200)
   View(df)
   red = "#FF0000"

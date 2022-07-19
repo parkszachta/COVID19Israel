@@ -1,0 +1,11 @@
+```{r}
+library(dplyr)
+library(epidemia)
+library(rstanarm)
+data("EuropeCovid")
+```
+```{r}
+rt <- epirt(formula = R(country, date) ~ 1 + lockdown + public_events,
+            link = scaled_logit(7))
+```
+

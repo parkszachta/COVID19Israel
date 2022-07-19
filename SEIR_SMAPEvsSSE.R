@@ -12,7 +12,7 @@ predict_data_SMAPE = function(df, params){
   lambda = mu = 1 / (365 * 82.8)
   sigma = 1 / (5.8)
   
-  ret_val <- SEIR_k_optim_SMAPE(df, params)
+  ret_val <- SEIR_k_optim(df, params)
   k <- ret_val[[1]]
   estimates_pois <- ret_val[[2]]
   
@@ -33,7 +33,7 @@ predict_data_SSE = function(df, params){
   lambda = mu = 1 / (365 * 82.8)
   sigma = 1 / (5.8)
   
-  ret_val <- SEIR_k_optim_SSE(df, params)
+  ret_val <- SEIR_k_optim(df, params)
   k <- ret_val[[1]]
   estimates_pois <- ret_val[[2]]
   
