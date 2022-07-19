@@ -8,6 +8,11 @@
 # Install if needed: install.packages("tidyverse")
 library(tidyverse)
 
+
+tvr_plot = function(){
+  
+
+
 # confirmed
 case_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 confirmed = read_csv(case_url)
@@ -158,4 +163,5 @@ p <- plot_ly(plt_data, x = ~date, y = ~r, type = "scatter", mode = "lines",
   ) %>%
   plotly::config(toImageButtonOptions = list(width = NULL, height = NULL))
 
-p
+return(p)
+}
