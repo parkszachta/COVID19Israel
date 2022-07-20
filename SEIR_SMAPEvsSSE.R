@@ -210,7 +210,7 @@ SEIR_plot1 <- function(israel_new){
   
   p1 = plot_ly(data = israel_new, x = ~date, y=~I, type = 'bar', name = 'Observed Cases') %>%
     add_trace(data = israel_new, x = ~date, y = ~pred_I_SSE, type='scatter', mode = 'lines', 
-              name = 'Predicted Infected Model', line = list(width = 4))
+              name = 'Infected Model', line = list(width = 4))
   
   p1 <- p1 %>% layout(yaxis = list(title = "Active Cases"))
   
@@ -258,7 +258,7 @@ SEIR_plot2 <- function(israel_new){
   
   p2 = plot_ly(data = israel_new, x = ~date, y=~R, type = 'bar', name = 'Observed Removed') %>%
     add_trace(data = israel_new, x = ~date, y = ~pred_R_SSE, type='scatter', 
-              mode = 'lines', name = 'Predicted Removed Model', line = list(width = 4))
+              mode = 'lines', name = 'Removed Model', line = list(width = 4))
   
   p2 <- p2 %>% layout(yaxis = list(title = "Removed Cases"))
   
