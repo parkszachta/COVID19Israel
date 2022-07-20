@@ -5,7 +5,7 @@ library(gridExtra)
 library(arm)
 library(tidyverse)
 library(bbmle)
-
+library(plotly)
 
 predict_data_SMAPE = function(df, params){
   N=9449000
@@ -169,44 +169,50 @@ israel_pred_df = function(){
 
 SEIR_plot1 <- function(israel_new){
   
-  # Plot results ----
-  ci = c("#C79999")
-  mn = c("#7C0000")
-  date_breaks = "1 month"
+  # # Plot results ----
+  # ci = c("#C79999")
+  # mn = c("#7C0000")
+  # date_breaks = "1 month"
+  # 
+  # base = ggplot() +
+  #   xlab("") +
+  #   scale_x_date(
+  #     date_breaks = date_breaks,
+  #     labels = scales::date_format("%e %b")
+  #   ) +
+  #   theme_bw() +
+  #   theme(
+  #     axis.text.x = element_text(angle = 45, hjust = 1),
+  #     axis.text = element_text(size = 12),
+  #     axis.title = element_text(size = 12)
+  #   ) +
+  #   theme(legend.position = "right")
+  # 
+  # 
+  # 
+  # p1 = base +
+  #   geom_line(mapping = aes(x = date, y = pred_I_SMAPE, color = colour),
+  #             data = israel_new, size = 0.5, color = mn) +
+  #   geom_line(mapping = aes(x = date, y = pred_I_SSE, color = red),
+  #             data = israel_new, size = 0.5, color = mn) +
+  #   # geom_ribbon(
+  #   #   mapping = aes(x = date, ymin = lwrI, ymax = uprI),
+  #   #   data = pred_I,
+  #   #   size = 1, fill = ci, alpha = 0.8,
+  #   # ) +
+  #   geom_bar(mapping = aes(x = date, y = I), stat = "identity",
+  #            data = israel_new, width = 0.5, fill = 'steelblue', alpha = 0.7,
+  #   ) +
+  #   xlim(israel_new$date[1], israel_new$date[nrow(israel_new)])
+  # 
+  # p1 = p1 + labs(y = "Active Cases")
+  # #ggsave("Cases_8months.pdf",p1,width=8, height=6)
   
-  base = ggplot() +
-    xlab("") +
-    scale_x_date(
-      date_breaks = date_breaks,
-      labels = scales::date_format("%e %b")
-    ) +
-    theme_bw() +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      axis.text = element_text(size = 12),
-      axis.title = element_text(size = 12)
-    ) +
-    theme(legend.position = "right")
+  p1 = plot_ly(data = israel_new, x = ~date, y=~I, type = 'bar', name = 'Observed Cases') %>%
+    add_trace(data = israel_new, x = ~date, y = ~pred_I_SSE, type='scatter', mode = 'lines', 
+              name = 'Predicted Infected Model', line = list(width = 4))
   
-  
-  
-  p1 = base +
-    geom_line(mapping = aes(x = date, y = pred_I_SMAPE, color = colour),
-              data = israel_new, size = 0.5, color = mn) +
-    geom_line(mapping = aes(x = date, y = pred_I_SSE, color = red),
-              data = israel_new, size = 0.5, color = mn) +
-    # geom_ribbon(
-    #   mapping = aes(x = date, ymin = lwrI, ymax = uprI),
-    #   data = pred_I,
-    #   size = 1, fill = ci, alpha = 0.8,
-    # ) +
-    geom_bar(mapping = aes(x = date, y = I), stat = "identity",
-             data = israel_new, width = 0.5, fill = 'steelblue', alpha = 0.7,
-    ) +
-    xlim(israel_new$date[1], israel_new$date[nrow(israel_new)])
-  
-  p1 = p1 + labs(y = "Active Cases")
-  #ggsave("Cases_8months.pdf",p1,width=8, height=6)
+  p1 <- p1 %>% layout(yaxis = list(title = "Active Cases"))
   
   return(p1)
 }
@@ -214,41 +220,47 @@ SEIR_plot1 <- function(israel_new){
 
 SEIR_plot2 <- function(israel_new){
   
-  ci = c("#C79999")
-  mn = c("#7C0000")
-  date_breaks = "1 month"
+  # ci = c("#C79999")
+  # mn = c("#7C0000")
+  # date_breaks = "1 month"
+  # 
+  # base = ggplot() +
+  #   xlab("") +
+  #   scale_x_date(
+  #     date_breaks = date_breaks,
+  #     labels = scales::date_format("%e %b")
+  #   ) +
+  #   theme_bw() +
+  #   theme(
+  #     axis.text.x = element_text(angle = 45, hjust = 1),
+  #     axis.text = element_text(size = 12),
+  #     axis.title = element_text(size = 12)
+  #   ) +
+  #   theme(legend.position = "right")
+  # 
+  # 
+  # p2 = base +
+  #   geom_line(mapping = aes(x = date, y = pred_R_SMAPE, color = colour),
+  #             data = israel_new, size = 1,color=mn) +
+  #   geom_line(mapping = aes(x = date, y = pred_R_SSE, color = red),
+  #             data = israel_new, size = 1,color=mn) +
+  #   # ggplot2::geom_ribbon(
+  #   #   mapping = ggplot2::aes(x = date, ymin = lwrR, ymax=uprR),
+  #   #   data =pred_R,
+  #   #   size = 1,fill=ci,alpha=0.8,
+  #   # )+
+  #   geom_bar(mapping = aes(x = date, y = R), stat = "identity",
+  #            data = israel_new, width = 0.5, fill = 'steelblue', alpha = 0.7,
+  #   ) +
+  #   xlim(israel_new$date[1], israel_new$date[nrow(israel_new)])
+  # p2 = p2 + labs(y = "Removed")
+  # #ggsave("Removed_8months.pdf",p2,width=8, height=6)
   
-  base = ggplot() +
-    xlab("") +
-    scale_x_date(
-      date_breaks = date_breaks,
-      labels = scales::date_format("%e %b")
-    ) +
-    theme_bw() +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      axis.text = element_text(size = 12),
-      axis.title = element_text(size = 12)
-    ) +
-    theme(legend.position = "right")
+  p2 = plot_ly(data = israel_new, x = ~date, y=~R, type = 'bar', name = 'Observed Removed') %>%
+    add_trace(data = israel_new, x = ~date, y = ~pred_R_SSE, type='scatter', 
+              mode = 'lines', name = 'Predicted Removed Model', line = list(width = 4))
   
-  
-  p2 = base +
-    geom_line(mapping = aes(x = date, y = pred_R_SMAPE, color = colour),
-              data = israel_new, size = 1,color=mn) +
-    geom_line(mapping = aes(x = date, y = pred_R_SSE, color = red),
-              data = israel_new, size = 1,color=mn) +
-    # ggplot2::geom_ribbon(
-    #   mapping = ggplot2::aes(x = date, ymin = lwrR, ymax=uprR),
-    #   data =pred_R,
-    #   size = 1,fill=ci,alpha=0.8,
-    # )+
-    geom_bar(mapping = aes(x = date, y = R), stat = "identity",
-             data = israel_new, width = 0.5, fill = 'steelblue', alpha = 0.7,
-    ) +
-    xlim(israel_new$date[1], israel_new$date[nrow(israel_new)])
-  p2 = p2 + labs(y = "Removed")
-  #ggsave("Removed_8months.pdf",p2,width=8, height=6)
+  p2 <- p2 %>% layout(yaxis = list(title = "Removed Cases"))
   
   return(p2)
   
