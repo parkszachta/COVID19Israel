@@ -23,8 +23,8 @@ ui <- fluidPage(
        decreasing cases, and an R(t) value of greater than 1 is a likely a sign of
        increasing cases."),
     tabsetPanel(type = "tabs",
-                tabPanel("Infected", plotOutput("infected_plot")),
-                tabPanel("Removed", plotOutput("removed_plot")),
+                tabPanel("Infected", plotlyOutput("infected_plot")),
+                tabPanel("Removed", plotlyOutput("removed_plot")),
                 tabPanel("TPR", plotlyOutput("tpr_plot")),
                 tabPanel("TVR", plotlyOutput("tvr_plot"))
     ),
@@ -44,10 +44,10 @@ load("output/model_results.RData")
 
 
 
-  output$infected_plot <- renderPlot({
+  output$infected_plot <- renderPlotly({
     results[[1]]
   })
-  output$removed_plot <- renderPlot({
+  output$removed_plot <- renderPlotly({
     results[[2]]
   })
   output$tpr_plot <- renderPlotly({
