@@ -10,12 +10,17 @@ library(eSIR)
 library(lubridate)
 library(dplyr)
 library(ggplot2)
+
 x <- "11/14/2006 20:10"
 
 
 
 
+
 date0 <- as.Date("2020-12-27")
+
+
+
 date1 <- as.Date("2021-01-07")
 date2 <- as.Date("2021-02-07")
 date3 <- as.Date("2021-03-07")
