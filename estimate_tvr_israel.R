@@ -79,6 +79,19 @@ israel =
          I = daily_infected,
          R = daily_removed) %>% filter (R > -3e4) %>% filter (I >= 0)
 
+vline <- function(x, color = "green") {
+  list(
+    type = "line",
+    y0 = 0,
+    y1 = 1,
+    yref = "paper",
+    x0 = x,
+    x1 = x,
+    line = list(color = color, dash="dot")
+  )
+}
+
+
 # Static plots
 ggplot(israel) +
   aes(x = date, y = I) +
@@ -132,11 +145,6 @@ plt_data <- tibble(
   ) %>%
   filter(!is.na(r))
 
-cap <- paste0("\uA9 COV-IND-19 Study Group. Last updated: ",
-              format(Sys.Date(), format = "%b %e"), sep = ' ')
-axis_title_font <- list(size = 16)
-tickfont        <- list(size = 16)
-
 p <- plot_ly(plt_data, x = ~date, y = ~r, type = "scatter", mode = "lines",
              line = list(color = "rgb(54, 163, 11)", width = 5),
              hoverinfo = "text",
@@ -148,6 +156,12 @@ p <- plot_ly(plt_data, x = ~date, y = ~r, type = "scatter", mode = "lines",
               line = list(color = 'rgba(54, 163, 11, 0.05)'),
               fillcolor = 'rgba(54, 163, 11, 0.2)',
               hoverinfo = "none") %>%
+  
+  
+  add_segments(x = as.Date("2021-01-07"), xend = as.Date("2021-01-07"), y = .5, yend = 2, line = list(color = 'black', width = 2, dash='dot')) %>%
+  add_segments(x = as.Date("2021-02-07"), xend = as.Date("2021-02-07"), y = .5, yend = 2, line = list(color = 'black', width = 2, dash='dot')) %>%
+  add_segments(x = as.Date("2021-03-07"), xend = as.Date("2021-03-07"), y = .5, yend = 2, line = list(color = 'black', width = 2, dash='dot')) %>%
+  
   layout(
     title = list(text = cap, xanchor = "left", x = 0),
     xaxis = list(title = "Date", titlefont = axis_title_font,
