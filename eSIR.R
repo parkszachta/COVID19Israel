@@ -240,9 +240,14 @@ p_infected = ggplot(data = eSIR_df_long)+ scale_x_date(date_breaks = "1 month",
   geom_line(mapping = aes(x = date_long, y = dat*N, color = type)) + 
   geom_ribbon(mapping = aes(x = date_long, ymin = rib_lower*N, ymax = rib_upper*N,fill=type),alpha=0.4)+
   scale_color_manual(values = c("red","black")) + labs(x = "Date", y = "Cases") + 
-  geom_vline(xintercept=as.numeric(israel$date[106]), linetype="dotted", color = "blue", size=1.5)
-  
+  geom_vline(xintercept=as.numeric(israel$date[106]), linetype="dotted", color = "blue", size=1.5) +
+  theme(text = element_text(size = 20), legend.key.size = unit(2, 'cm')) 
+p_infected$labels$colour ="Type"
+p_infected$labels$fill ="Type"
 
+SMAPE_I_train <- (100/length(eSIR_df_2$mean[1:105])) * sum(2*abs(eSIR_df_2$mean[1:105]-eSIR_df_2$actual[1:105])/ (abs(eSIR_df_2$mean[1:105])+abs(eSIR_df_2$actual[1:105])))
+
+SMAPE_I_test <- (100/length(eSIR_df_2$mean[106:149])) * sum(2*abs(eSIR_df_2$mean[106:149]-eSIR_df_2$actual[106:149])/ (abs(eSIR_df_2$mean[106:149])+abs(eSIR_df_2$actual[106:149])))
 
 
 
@@ -263,9 +268,19 @@ p_removed = ggplot(data = eSIR_df_long)+ scale_x_date(date_breaks = "1 month",
   geom_line(mapping = aes(x = date_long, y = dat*N, color = type)) + 
   geom_ribbon(mapping = aes(x = date_long, ymin = rib_lower*N, ymax = rib_upper*N,fill=type),alpha=0.4)+
   scale_color_manual(values = c("red","black")) + labs(x = "Date", y = "Removed") + 
-  geom_vline(xintercept=as.numeric(israel$date[106]), linetype="dotted", color = "blue", size=1.5)
+  geom_vline(xintercept=as.numeric(israel$date[106]), linetype="dotted", color = "blue", size=1.5) +
+  theme(text = element_text(size = 20), legend.key.size = unit(2, 'cm')) 
+p_removed$labels$fill="Type"
+p_removed$labels$colour ="Type"
 
-return(list(p_infected = p_infected, p_removed = p_removed))
+#SMAPE_R <- (100/length(eSIR_df_2$mean) * sum(2*abs(eSIR_df_2$mean-eSIR_df_2$actual) / (abs(eSIR_df_2$mean)+abs(eSIR_df_2$actual))))
+
+
+SMAPE_R_train <- (100/length(eSIR_df_2$mean[1:105])) * sum(2*abs(eSIR_df_2$mean[1:105]-eSIR_df_2$actual[1:105])/ (abs(eSIR_df_2$mean[1:105])+abs(eSIR_df_2$actual[1:105])))
+
+SMAPE_R_test <- (100/length(eSIR_df_2$mean[106:149])) * sum(2*abs(eSIR_df_2$mean[106:149]-eSIR_df_2$actual[106:149])/ (abs(eSIR_df_2$mean[106:149])+abs(eSIR_df_2$actual[106:149])))
+
+return(list(p_infected = p_infected, p_removed = p_removed, SMAPE_I_test = SMAPE_I_test, SMAPE_I_train = SMAPE_I_train, SMAPE_R_test = SMAPE_R_test, SMAPE_R_train = SMAPE_R_train))
 }
 
 
