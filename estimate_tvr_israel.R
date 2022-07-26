@@ -7,6 +7,7 @@
 # load packages
 # Install if needed: install.packages("tidyverse")
 library(tidyverse)
+library(plotly)
 
 
 tvr_plot = function(){
@@ -146,15 +147,15 @@ plt_data <- tibble(
   filter(!is.na(r))
 
 p <- plot_ly(plt_data, x = ~date, y = ~r, type = "scatter", mode = "lines",
-             line = list(color = "rgb(54, 163, 11)", width = 5),
+             line = list(color = "rgb(9, 131, 179)", width = 5),
              hoverinfo = "text",
              text   = ~text) %>%
   add_markers(data = plt_data, x = ~date, y = ~r, mode = "marker",
               marker = list(color = "rgb(38, 38, 38)", symbol = 3)) %>%
   add_ribbons(ymin = ~lower,
               ymax = ~upper,
-              line = list(color = 'rgba(54, 163, 11, 0.05)'),
-              fillcolor = 'rgba(54, 163, 11, 0.2)',
+              line = list(color = 'rgba(2, 180, 250, 0.05)'),
+              fillcolor = 'rgba(2, 180, 250, 0.2)',
               hoverinfo = "none") %>%
   
   
@@ -163,15 +164,15 @@ p <- plot_ly(plt_data, x = ~date, y = ~r, type = "scatter", mode = "lines",
   add_segments(x = as.Date("2021-03-07"), xend = as.Date("2021-03-07"), y = .5, yend = 2, line = list(color = 'black', width = 2, dash='dot')) %>%
   
   layout(
-    title = list(text = cap, xanchor = "left", x = 0),
-    xaxis = list(title = "Date", titlefont = axis_title_font,
-                 tickfont = tickfont, zeroline = T),
-    yaxis = list(title = "R(t)", titlefont = axis_title_font,
-                 tickfont = tickfont, zeroline = T),
+    title = list(text = "Time-Varying Reproduction Number (TVR) Plot", xanchor = "left", x = 0),
+    xaxis = list(title = "Date",
+                 zeroline = T),
+    yaxis = list(title = "R(t)",
+                 zeroline = T),
     shapes = list(
       type = "line", xref = "paper", yref = "data",
       x0 = 0, x1 = 1, y0 = 1, y1 = 1,
-      line = list(color = "rgba(255, 153, 51, 0.5)")
+      line = list(color = "rgba(201, 40, 40, 0.5)")
     ),
     showlegend = FALSE
   ) %>%
@@ -179,3 +180,4 @@ p <- plot_ly(plt_data, x = ~date, y = ~r, type = "scatter", mode = "lines",
 
 return(p)
 }
+tvr_plot()
