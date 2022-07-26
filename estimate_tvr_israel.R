@@ -146,6 +146,9 @@ plt_data <- tibble(
   ) %>%
   filter(!is.na(r))
 
+titlesize <- list(size = 20)
+tickfont <- list(size=18)
+
 p <- plot_ly(plt_data, x = ~date, y = ~r, type = "scatter", mode = "lines",
              line = list(color = "rgb(9, 131, 179)", width = 5),
              hoverinfo = "text",
@@ -163,11 +166,17 @@ p <- plot_ly(plt_data, x = ~date, y = ~r, type = "scatter", mode = "lines",
   add_segments(x = as.Date("2021-02-07"), xend = as.Date("2021-02-07"), y = .5, yend = 2, line = list(color = 'black', width = 2, dash='dot')) %>%
   add_segments(x = as.Date("2021-03-07"), xend = as.Date("2021-03-07"), y = .5, yend = 2, line = list(color = 'black', width = 2, dash='dot')) %>%
   
+  
   layout(
-    title = list(text = "Time-Varying Reproduction Number (TVR) Plot", xanchor = "left", x = 0),
-    xaxis = list(title = "Date",
+    title = list(text = "Time-Varying Reproduction Number (TVR) Plot", xanchor = "left", x = 0,
+                 titlefont = titlesize),
+    xaxis = list(title = "Date (2021)", 
+                 titlefont = titlesize,
+                 tickfont = tickfont,
                  zeroline = T),
     yaxis = list(title = "R(t)",
+                 titlefont = titlesize,
+                 tickfont = tickfont,
                  zeroline = T),
     shapes = list(
       type = "line", xref = "paper", yref = "data",
