@@ -4,41 +4,38 @@ model <- function() {
   source("positive_rate.R")
   source("estimate_tvr_israel.R")
   source("SEIR_SMAPEvsSSE.R")
-
-
+  source("eSIR.R")
+  
   israel <- as.data.frame(israel_pred_df())
-  israel <- israel[-11]
+  israel_SIR <- as.data.frame(pred_SIR())
+  israel_eSIR_plots <- get_eSIR_plots()
 
-
-  date0 <- as.Date("2020-12-27")
-  date1 <- as.Date("2021-01-07")
-  date2 <- as.Date("2021-02-07")
-  date3 <- as.Date("2021-03-07")
-  date4 <- as.Date("2021-04-18")
-
-  date_initial = date0
-  date_final = date4
-
-
-  israel <-  israel %>% rename(pred_I_SMAPE = 11,
-                               pred_R_SMAPE = 12,
-                               pred_I_SSE = 13,
-                               pred_R_SSE = 14)
-
-  israel$pred_I_SMAPE = unlist(israel$pred_I_SMAPE)
-  israel$pred_I_SMAPE = unlist(israel$pred_I_SMAPE)
-  israel$pred_R_SSE = unlist(israel$pred_R_SSE)
-  israel$pred_R_SSE = unlist(israel$pred_R_SSE)
+  israel$pred_I_med = unlist(israel$pred_I_med)
+  israel$pred_R_med = unlist(israel$pred_R_med)
   israel$date = unlist(israel$date)
-  israel$I = unlist(israel$I)
-  israel$R = unlist(israel$R)
+  israel$lwrI = unlist(israel$lwrI)
+  israel$lwrR = unlist(israel$lwrR)
+  israel$uprI = unlist(israel$uprI)
+  israel$uprR = unlist(israel$uprR)
+  
+  israel_SIR$pred_I = unlist(israel_SIR$pred_I)
+  israel_SIR$pred_R = unlist(israel_SIR$pred_R)
+  israel_SIR$date = unlist(israel_SIR$date)
 
-  p1 <- SEIR_plot1(israel)
-  p2 <- SEIR_plot2(israel)
+
+  SEIRp1 <- SEIR_plot1(israel)
+  SEIRp2 <- SEIR_plot2(israel)
+  SIRp1 <- SIR_plot1(israel_SIR)
+  SIRp2 <- SIR_plot2(israel_SIR)
   tpr <- positive_rate()
   tvr <- tvr_plot()
-  return(list(p1 = p1, p2 = p2, tpr = tpr, tvr = tvr))
+  eSIRp1 <- israel_eSIR_plots[[1]]
+  eSIRp2 <- israel_eSIR_plots[[2]]
+  
+  return(list(SEIRp1 = SEIRp1, SEIRp2 = SEIRp2, tpr = tpr, tvr = tvr, SIRp1 = SIRp1, SIRp2 = SIRp2, eSIRp1 = eSIRp1, eSIRp2 = eSIRp2))
+
 }
+
 results = model()
 
 save(results, file="output/model_results.RData")

@@ -12,15 +12,15 @@ israel_data_only <- function(date_initial, date_final){
 ### Import the data
 
 case_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
-confirmed = read_csv(case_url)
+confirmed = read_csv(case_url, show_col_types = FALSE)
 
 # deaths
 death_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
-deaths = read_csv(death_url)
+deaths = read_csv(death_url, show_col_types = FALSE)
 
 # recoveries
 recovery_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"
-recoveries = read_csv(recovery_url)
+recoveries = read_csv(recovery_url, show_col_types = FALSE)
 
 # Process and merge data ----
 israel_confirmed = confirmed %>%
@@ -251,4 +251,77 @@ SMAPE_SEIR = function(beta, gamma, sigma, N, data, lambda, mu, K) {
 SMAPE2_SEIR = function(x, N, data, K, lambda, mu, sigma) {
   SMAPE_SEIR(beta = x[1], gamma = x[2], N = N, data = data, lambda = lambda, mu = mu, sigma = sigma, K = K)
 }
+
+
+
+SIR_k_optim = function(df, starting_param_val){
+  N=9449000
+  lambda = mu = 1 / (365 * 82.8) 
+  sigma = 1 / (5.8)
+  
+  k_seq <- seq(0.1, 1.5, by = 0.02)
+  k_min <- 0
+  
+  
+  estimate_min <- .Machine$integer.max-1
+  error = 0
+  params = 0
+  
+  for(i in k_seq){
+    
+    estimates_pois = optim(starting_param_val, SMAPE2_SIR, N = N, 
+                           data = df, lambda = lambda, mu = mu, K = i)
+    
+    
+    if(estimates_pois$value < estimate_min){
+      estimate_min = estimates_pois$value
+      params = list(estimates_pois$par)
+      k_min = i
+    }
+    
+  }
+  return(c(k_min, params))
+  
+}
+
+
+SMAPE_SIR = function(beta, gamma, N, data, lambda, mu, K) {
+  # starting cases and removals on day 1
+  I0 = data$I[1]
+  R0 = data$R[1]
+  # E0 = (data$cases_total[2] - data$cases_total[1]) / sigma
+  times = data$day
+  # transform parameters so they are non-negative
+  beta = exp(beta)
+  gamma = exp(gamma)
+  # generate predictions using parameters, starting values
+  predictions = sir_1(beta = beta, gamma = gamma,                       # parameters
+                       I0 = I0, R0 = R0,                           # variables' intial values
+                       times = times, N = N, lambda = lambda, mu = mu)    # time points
+  # compute the sums of squares
+  # sum((predictions$I[-1] - data$I[-1])^2 + (predictions$R[-1] - data$R[-1])^2)
+  SPAME_I <- (1/length(predictions$I[-1]) * sum(2*abs(predictions$I[-1]-data$I[-1]) / (abs(predictions$I[-1])+abs(data$I[-1]))*100))
+  SPAME_R <- (1/length(predictions$R[-1]) * sum(2*abs(predictions$R[-1]-data$R[-1]) / (abs(predictions$R[-1])+abs(data$R[-1]))*100))
+  SPAME_R + SPAME_I
+  #sum((predictions$I[-1] - data$I[-1])^2 )
+}
+
+# convenient wrapper to return sums of squares 
+SMAPE2_SIR = function(x, N, data, lambda, mu) {
+  SMAPE_SIR(beta = x[1], gamma = x[2], N = N, data = data, lambda = lambda, mu = mu)
+}
+
+
+SMAPE_calc <- function(data, train_or_test){
+  calc <- c()
+  data <- data[-11]
+  
+  data = data %>%
+    mutate(train_test = ifelse(period == 5, "test", "train"))
+  data <- data %>% filter(train_test == train_or_test) 
+  calc[1] <- (100 / length(data)) * (sum (2*abs(data$pred_I[-1]-data$I[-1]) / (abs(data$pred_I[-1])+abs(data$I[-1]))))
+  calc[2] <- (100 / length(data)) * (sum (2*abs(data$pred_R[-1]-data$R[-1]) / (abs(data$pred_R[-1])+abs(data$R[-1]))))
+  return(calc)
+}
+
 

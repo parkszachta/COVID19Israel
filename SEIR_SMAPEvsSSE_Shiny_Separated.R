@@ -23,10 +23,14 @@ ui <- fluidPage(
        decreasing cases, and an R(t) value of greater than 1 is a likely a sign of
        increasing cases."),
     tabsetPanel(type = "tabs",
-                tabPanel("Infected", plotlyOutput("infected_plot")),
-                tabPanel("Removed", plotlyOutput("removed_plot")),
+                tabPanel("SIR Active Cases", plotlyOutput("SIRinfected_plot")),
+                tabPanel("SIR Total Removed", plotlyOutput("SIRremoved_plot")),
+                tabPanel("SEIR Active Cases", plotlyOutput("SEIRinfected_plot")),
+                tabPanel("SEIR Total Removed", plotlyOutput("SEIRremoved_plot")),
+                tabPanel("eSIR Active Cases", plotlyOutput("eSIRinfected_plot")),
+                tabPanel("eSIR Total Removed", plotlyOutput("eSIRremoved_plot")),
                 tabPanel("TPR", plotlyOutput("tpr_plot")),
-                tabPanel("TVR", plotlyOutput("tvr_plot"))
+                tabPanel("TVR", plotlyOutput("tvr_plot"))             
     ),
     p("Cases Data: https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"),
     p("Deaths Data: https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"),
@@ -47,10 +51,10 @@ load("output/model_results.RData")
 
 
 
-  output$infected_plot <- renderPlotly({
+  output$SEIRinfected_plot <- renderPlotly({
     results[[1]]
   })
-  output$removed_plot <- renderPlotly({
+  output$SEIRremoved_plot <- renderPlotly({
     results[[2]]
   })
   output$tpr_plot <- renderPlotly({
@@ -59,7 +63,18 @@ load("output/model_results.RData")
   output$tvr_plot <- renderPlotly({
     results[[4]]
   })
-
+  output$SIRinfected_plot <- renderPlotly({
+    results[[5]]
+  })
+  output$SIRremoved_plot <- renderPlotly({
+    results[[6]]
+  })
+  output$eSIRinfected_plot <- renderPlotly({
+    results[[7]]
+  })
+  output$eSIRremoved_plot <- renderPlotly({
+    results[[8]]
+  })
 
 
 }
